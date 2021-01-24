@@ -2,18 +2,18 @@
 # author: unknowwhite@outlook.com
 # wechat: Ben_Xiaobai
 import sys
+
 sys.path.append("./")
 sys.setrecursionlimit(10000000)
-import base64
 from io import BytesIO
 from PIL import Image
 import qrcode
-import os
+
 
 def gen_qrcode(args):
     qrcode_data = args['qrdata']
     logo_path = args['logo'] if 'logo' in args else None
-    qr = qrcode.QRCode(border=1,error_correction=qrcode.ERROR_CORRECT_H)
+    qr = qrcode.QRCode(border=1, error_correction=qrcode.ERROR_CORRECT_H)
     qr.add_data(qrcode_data)
     img = qr.make_image().convert('RGBA')
     img_w, img_h = img.size

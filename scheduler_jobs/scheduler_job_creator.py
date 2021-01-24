@@ -2,58 +2,61 @@
 # author: unknowwhite@outlook.com
 # wechat: Ben_Xiaobai
 import sys
+
 sys.path.append("./")
 sys.setrecursionlimit(10000000)
-from component.db_func import insert_usergroup_plan,insert_noti_temple
+from component.db_func import insert_usergroup_plan, insert_noti_temple
 import json
 
-def create_usergroup_plan():
-    
-    #计划策略
-    project = 'demo_app' #项目名称
-    group_title = '最近登录的2500位用户' #分群标题、
-    group_desc = '最近到访用户的2500位已注册用户。从T-1天开始向前查七天，如果七天凑不够2500，以实际数量为准。包含T-1天。	' #分群描述
-    repeatable = '* 3 * * *' #任务重复定时器，分，时，日，月，周。不填的用*代替。跟crontab一个逻辑，但不支持1-10的方式表达，多日的需要1,2,3,4,5,6,7,8这样的形式填 如'* 1 1,2,3 * *'即为每月1,2,3日的凌晨1点执行,周的表达方式0是周一，6是周日
-    priority = 13 #任务的优先级
-    enable_policy = 28 #模板生效的策略,8自动，9手动，10禁用，24自动分群但不自动应用模板,28自动分群自动应用模板但不自动发送
-    
-    #计划内容
-    default_temple = [1] #默认推送模板（如果开启自动应用模板,enable_policy=8，则依次应用array里的所有模板，如果不需要自动应用模板，可以为空或者enable_policy=24)
-    func_dir = "scheduler_jobs.demo_app" #计划所调用的func位置
-    func_name = "last_1500_email" #计划所调用的func名称
-    args = {"count": 2500, "date": "___date___", "days": 7} # 计划需要传递的变量名及变量
 
-    #入库
+def create_usergroup_plan():
+    # 计划策略
+    project = 'demo_app'  # 项目名称
+    group_title = '最近登录的2500位用户'  # 分群标题、
+    group_desc = '最近到访用户的2500位已注册用户。从T-1天开始向前查七天，如果七天凑不够2500，以实际数量为准。包含T-1天。	'  # 分群描述
+    repeatable = '* 3 * * *'  # 任务重复定时器，分，时，日，月，周。不填的用*代替。跟crontab一个逻辑，但不支持1-10的方式表达，多日的需要1,2,3,4,5,6,7,8这样的形式填 如'* 1 1,2,3 * *'即为每月1,2,3日的凌晨1点执行,周的表达方式0是周一，6是周日
+    priority = 13  # 任务的优先级
+    enable_policy = 28  # 模板生效的策略,8自动，9手动，10禁用，24自动分群但不自动应用模板,28自动分群自动应用模板但不自动发送
+
+    # 计划内容
+    default_temple = [1]  # 默认推送模板（如果开启自动应用模板,enable_policy=8，则依次应用array里的所有模板，如果不需要自动应用模板，可以为空或者enable_policy=24)
+    func_dir = "scheduler_jobs.demo_app"  # 计划所调用的func位置
+    func_name = "last_1500_email"  # 计划所调用的func名称
+    args = {"count": 2500, "date": "___date___", "days": 7}  # 计划需要传递的变量名及变量
+
+    # 入库
     func = {"args": args, "default_temple": default_temple, "dir": func_dir, "name": func_name}
-    result = insert_usergroup_plan(project=project,group_title=group_title,group_desc=group_desc,repeatable=repeatable,priority=priority,enable_policy=enable_policy,func_args=json.dumps(func,ensure_ascii=False))
+    result = insert_usergroup_plan(project=project, group_title=group_title, group_desc=group_desc, repeatable=repeatable, priority=priority,
+                                   enable_policy=enable_policy, func_args=json.dumps(func, ensure_ascii=False))
     print(result)
 
 
 def create_noti_temple():
-    
-    #模板信息
-    name = '你在demo_app的视频有更新了' #模板的名称
-    temple_desc = '视频取当前推荐影片的前5条，自动应用模板时，所有人是create_auto_group，手动应用的所有人是应用人。' #描述模板
+    # 模板信息
+    name = '你在demo_app的视频有更新了'  # 模板的名称
+    temple_desc = '视频取当前推荐影片的前5条，自动应用模板时，所有人是create_auto_group，手动应用的所有人是应用人。'  # 描述模板
 
-    #模板策略
-    project = 'tvcbook' #项目名称
-    track_url = 'http://你的域名/sa.gif' #鬼策的监测地址（用来接收数据的地址）
-    remark = 'production' #鬼策的remark标记
-    default_send_time = '* 15 * * 5' #自动发送的时间，分，时，日，月，周。不填的用*代替。跟crontab一个逻辑，但不支持1-10的方式表达，多日的需要1,2,3,4,5,6,7,8这样的形式填 如'* 1 1,2,3 * *'即为每月1,2,3日的凌晨1点执行
+    # 模板策略
+    project = 'tvcbook'  # 项目名称
+    track_url = 'http://你的域名/sa.gif'  # 鬼策的监测地址（用来接收数据的地址）
+    remark = 'production'  # 鬼策的remark标记
+    default_send_time = '* 15 * * 5'  # 自动发送的时间，分，时，日，月，周。不填的用*代替。跟crontab一个逻辑，但不支持1-10的方式表达，多日的需要1,2,3,4,5,6,7,8这样的形式填 如'* 1 1,2,3 * *'即为每月1,2,3日的凌晨1点执行
 
-    #附加组件调用
-    required = True #模板是否需要调用外部程序补充数据，True时会调用func_dir和func_name所指定的程序。调用外部程序的功能主要用来解决用户分群时无法创建千人千面结果的情况，如分群只分出了用户信息，但是推送内容并不同步生产，如一个分群对应多次个模板套用的情况。
-    func_dir = "scheduler_jobs.demo_app" #模板所需要调用的外部程序目录
-    func_name = "home_ref" #模板所需要调用的外部程序名称
+    # 附加组件调用
+    required = True  # 模板是否需要调用外部程序补充数据，True时会调用func_dir和func_name所指定的程序。调用外部程序的功能主要用来解决用户分群时无法创建千人千面结果的情况，如分群只分出了用户信息，但是推送内容并不同步生产，如一个分群对应多次个模板套用的情况。
+    func_dir = "scheduler_jobs.demo_app"  # 模板所需要调用的外部程序目录
+    func_name = "home_ref"  # 模板所需要调用的外部程序名称
 
-    #meta信息（模板描述信息）
-    medium = "email" #模板适配的媒介名称（对应status_code表）
-    medium_id = 23 #模板适配的媒介id（对应status_code表）
+    # meta信息（模板描述信息）
+    medium = "email"  # 模板适配的媒介名称（对应status_code表）
+    medium_id = 23  # 模板适配的媒介id（对应status_code表）
 
-    #替换参数
-    args = {"content": "___content___", "email": "___email___", "nickname": "___nickname___", "subject": "hey，___nickname___，你在demo_app搜索的创意视频有更新了，快来看看吧", "utm_campaign": "___owner___", "utm_content": "___group_id___", "utm_email": "___email___", "utm_medium": "noti_temple_1", "utm_source": "邮件", "utm_term": "___etl_date___"} #temple_args,data_args和func里返回的内容会替换content里的___key___部分，
+    # 替换参数
+    args = {"content": "___content___", "email": "___email___", "nickname": "___nickname___", "subject": "hey，___nickname___，你在demo_app搜索的创意视频有更新了，快来看看吧",
+            "utm_campaign": "___owner___", "utm_content": "___group_id___", "utm_email": "___email___", "utm_medium": "noti_temple_1", "utm_source": "邮件",
+            "utm_term": "___etl_date___"}  # temple_args,data_args和func里返回的内容会替换content里的___key___部分，
 
-    #推送正文
+    # 推送正文
     content = '''<table width="600" border="0"  class="ke-zeroborder">
 	<tbody>
 		<tr>
@@ -188,17 +191,20 @@ def create_noti_temple():
 			</td>
 		</tr>
 	</tbody>
-</table>''' #推送的正文内容，需要替换的部分前后加上___，应用模板的时候，会被temple_args,data_args和func里返回的内容替换.
+</table>'''  # 推送的正文内容，需要替换的部分前后加上___，应用模板的时候，会被temple_args,data_args和func里返回的内容替换.
     # content = "这是一个测试内容，用户昵称是___nickname___，跳转链接是http://www.tvcbook.com/?utm_source=___utm_source___\u0026tm_campaign=___utm_campaign___\u0026utm_term=___utm_term___\u0026utm_content=___group_id___\u0026utm_medium=___utm_medium___,跟踪链接是___read_tracker___" #推送的正文内容，需要替换的部分前后加上___，应用模板的时候，会被temple_args,data_args和func里返回的内容替换.
-    subject = "___subject___" #推送的标题内容，需要替换的部分前后加上___，应用模板的时候，会被temple_args,data_args和func里返回的内容替换.
-    mail_to = "___email___" #推送的目标地址，不一定是email地址，也可以是手机号，看自定义变量定义的是什么
-    mail_from = "" #推送的发件人地址，不一定是email，看自定义变量定义的是什么
+    subject = "___subject___"  # 推送的标题内容，需要替换的部分前后加上___，应用模板的时候，会被temple_args,data_args和func里返回的内容替换.
+    mail_to = "___email___"  # 推送的目标地址，不一定是email地址，也可以是手机号，看自定义变量定义的是什么
+    mail_from = ""  # 推送的发件人地址，不一定是email，看自定义变量定义的是什么
 
-    #入库
-    pending_args = {"add_on_func": {"dir": func_dir, "name": func_name , "required": required}, "args": args, "ghost_sa": {"remark": remark, "track_url": track_url}, "meta": {"medium": medium, "medium_id": medium_id, "default_send_time":default_send_time}}
+    # 入库
+    pending_args = {"add_on_func": {"dir": func_dir, "name": func_name, "required": required}, "args": args,
+                    "ghost_sa": {"remark": remark, "track_url": track_url},
+                    "meta": {"medium": medium, "medium_id": medium_id, "default_send_time": default_send_time}}
     pending_content = {"content": content, "mail_from": mail_from, "mail_to": mail_to, "subject": subject}
-    result = insert_noti_temple(project=project,name=name,args=json.dumps(pending_args,ensure_ascii=False),content=json.dumps(pending_content,ensure_ascii=False),temple_desc=temple_desc)
-    
+    result = insert_noti_temple(project=project, name=name, args=json.dumps(pending_args, ensure_ascii=False),
+                                content=json.dumps(pending_content, ensure_ascii=False), temple_desc=temple_desc)
+
 
 if __name__ == "__main__":
     # create_usergroup_plan()

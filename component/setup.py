@@ -2,17 +2,19 @@
 # author: unknowwhite@outlook.com
 # wechat: Ben_Xiaobai
 import sys
+
 sys.path.append("./")
 sys.setrecursionlimit(10000000)
-from component.db_op import do_tidb_exe,do_tidb_select
+from component.db_op import do_tidb_exe, do_tidb_select
 from component.db_func import insert_mobile_ad_src
 import time
 import csv
 import os
 
+
 def update_table_history(project_name):
-    #升级user表支持多个设备绑定。2019-12-11
-    sql="""CREATE TABLE IF NOT EXISTS `{project_name}_user2` (
+    # 升级user表支持多个设备绑定。2019-12-11
+    sql = """CREATE TABLE IF NOT EXISTS `{project_name}_user2` (
     `distinct_id` varchar(255) NOT NULL,
     `lib` varchar(255) NOT NULL,
     `map_id` varchar(255) NOT NULL,
@@ -33,12 +35,12 @@ SELECT * FROM `{project_name}_user`);
 set @@session.tidb_batch_insert = 0;
 ALTER table {project_name}_user RENAME to {project_name}_user3;
 ALTER table {project_name}_user2 RENAME to {project_name}_user;""".format(project_name=project_name)
-    result=do_tidb_exe(sql)
+    result = do_tidb_exe(sql)
     print(result)
 
 
-def create_project(project_name,expired=None):
-    #创建新项目，project_name是项目名，expired是过期时间，字串输入 2019-01-01 格式
+def create_project(project_name, expired=None):
+    # 创建新项目，project_name是项目名，expired是过期时间，字串输入 2019-01-01 格式
     create_project_list = """CREATE TABLE IF NOT EXISTS `project_list` (
     `project_name` varchar(255) DEFAULT NULL COMMENT '项目名称',
     `created_at` int(11) DEFAULT NULL COMMENT '创建时间',
@@ -83,7 +85,7 @@ def create_project(project_name,expired=None):
     KEY `short_url_result` (`short_url`,`result`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;"""
 
-    create_mobile_ad_src ="""CREATE TABLE if not EXISTS `mobile_ad_src` (
+    create_mobile_ad_src = """CREATE TABLE if not EXISTS `mobile_ad_src` (
     `src` varchar(255) NOT NULL COMMENT '创建源名称',
     `src_name` varchar(255) DEFAULT NULL COMMENT '创建源的中文名字',
     `src_args` varchar(1024) DEFAULT NULL COMMENT '创建源自带参数',
@@ -96,7 +98,7 @@ def create_project(project_name,expired=None):
     `utm_term` varchar(255) DEFAULT NULL COMMENT '预制的utm_term',
     PRIMARY KEY (`src`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;"""
-    create_mobile_ad_list ="""CREATE TABLE if not EXISTS `mobile_ad_list` (
+    create_mobile_ad_list = """CREATE TABLE if not EXISTS `mobile_ad_list` (
     `project` varchar(255) DEFAULT NULL COMMENT '项目名',
     `url` varchar(768) NOT NULL COMMENT '监测地址',
     `expired_at` int(11) DEFAULT NULL COMMENT '过期时间',
@@ -111,7 +113,7 @@ def create_project(project_name,expired=None):
     `utm_term` varchar(2048) DEFAULT NULL COMMENT 'utm_term',
     PRIMARY KEY (`url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;"""
-    created_shortcut_read="""CREATE TABLE if not EXISTS `shortcut_read` (
+    created_shortcut_read = """CREATE TABLE if not EXISTS `shortcut_read` (
     `short_url` varchar(255) NOT NULL COMMENT '短链地址',
     `ip` varchar(20) DEFAULT NULL COMMENT 'ip',
     `created_at` int(11) DEFAULT NULL COMMENT '时间',
@@ -132,18 +134,18 @@ def create_project(project_name,expired=None):
     do_tidb_exe(created_shortcut_read)
     # print('project_list已生成')
     check_sql = "show tables"
-    check_result,check_count = do_tidb_select(check_sql)
+    check_result, check_count = do_tidb_select(check_sql)
     tables_name = []
     for line in check_result:
         tables_name.append(line[0])
     # print(tables_name)
     check_project_list_sql = """SELECT count(*) FROM `project_list` where project_name='{project_name}'""".format(project_name=project_name)
-    check_project_list_result,check_project_list_count = do_tidb_select(check_project_list_sql)
+    check_project_list_result, check_project_list_count = do_tidb_select(check_project_list_sql)
     # print(check_project_list_result[0][0])
-    if project_name in tables_name or check_project_list_result[0][0]>0:
-        print(project_name+'项目表单已存在')
+    if project_name in tables_name or check_project_list_result[0][0] > 0:
+        print(project_name + '项目表单已存在')
     else:
-        table_sql="""CREATE TABLE `{project_name}` (
+        table_sql = """CREATE TABLE `{project_name}` (
     `track_id` bigint(17) DEFAULT NULL,
     `distinct_id` varchar(64) DEFAULT NULL,
     `lib` varchar(255) DEFAULT NULL,
@@ -178,7 +180,7 @@ def create_project(project_name,expired=None):
     KEY `event_date` (`event`,`date`),
     KEY `event_remark_date` (`event`,`remark`,`date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;""".format(project_name=project_name)
-        table_device_sql ="""CREATE TABLE `{project_name}_device` (
+        table_device_sql = """CREATE TABLE `{project_name}_device` (
     `distinct_id` varchar(255) NOT NULL,
     `lib` varchar(255) DEFAULT NULL,
     `device_id` varchar(255) DEFAULT NULL,
@@ -269,13 +271,13 @@ def create_project(project_name,expired=None):
     PRIMARY KEY (`lib`,`remark`,`event`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;;""".format(project_name=project_name)
         do_tidb_exe(table_sql)
-        print(project_name+'table表单已插入')
+        print(project_name + 'table表单已插入')
         do_tidb_exe(table_device_sql)
-        print(project_name+'device表单已插入')
+        print(project_name + 'device表单已插入')
         do_tidb_exe(table_user_sql)
-        print(project_name+'user表单已插入')
+        print(project_name + 'user表单已插入')
         do_tidb_exe(table_properties_sql)
-        print(project_name+'properties表单已插入')
+        print(project_name + 'properties表单已插入')
         sql_insert_status_code = """CREATE TABLE IF NOT EXISTS `status_code` (
     `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id',
     `desc` varchar(255) DEFAULT NULL COMMENT '含义',
@@ -284,7 +286,34 @@ def create_project(project_name,expired=None):
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin AUTO_INCREMENT=1;"""
         do_tidb_exe(sql_insert_status_code)
         print('状态码表创建完')
-        status_codes = ["INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (1, '分群列表状态', 0);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (2, '创建列表开始', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (3, '分群信息写入中', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (4, '分群写入完成并包含错误', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (5, '分群写入完成', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (6, '分群写入失败', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (7, '生效策略', 0);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (8, '自动', 7);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (9, '手动', 7);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (10, '禁用', 7);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (11, '进入分群队列', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (12, '优先级', 0);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (13, '普通', 12);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (14, '高', 12);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (15, '最高', 12);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (16, '已添加任务队列', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (17, '任务已被选取', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (18, '任务方法加载完', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (19, '任务执行成功', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (20, '分群ETL失败', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (21, '任务执行失败', 1);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (22, '通知方式', 0);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (23, 'email', 22);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (24, '自动分群但不自动应用模板', 7);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (25, '推送状态', 0);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (26, '推送成功', 25);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (27, '推送失败', 25);","INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (28, '自动分群自动应用模板但不自动发送', 7);"]
+        status_codes = ["INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (1, '分群列表状态', 0);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (2, '创建列表开始', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (3, '分群信息写入中', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (4, '分群写入完成并包含错误', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (5, '分群写入完成', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (6, '分群写入失败', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (7, '生效策略', 0);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (8, '自动', 7);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (9, '手动', 7);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (10, '禁用', 7);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (11, '进入分群队列', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (12, '优先级', 0);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (13, '普通', 12);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (14, '高', 12);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (15, '最高', 12);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (16, '已添加任务队列', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (17, '任务已被选取', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (18, '任务方法加载完', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (19, '任务执行成功', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (20, '分群ETL失败', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (21, '任务执行失败', 1);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (22, '通知方式', 0);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (23, 'email', 22);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (24, '自动分群但不自动应用模板', 7);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (25, '推送状态', 0);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (26, '推送成功', 25);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (27, '推送失败', 25);",
+                        "INSERT IGNORE INTO `events`.`status_code`(`id`, `desc`, `p_id`) VALUES (28, '自动分群自动应用模板但不自动发送', 7);"]
         for code in status_codes:
             do_tidb_exe(code)
         print('状态码添加完毕')
@@ -350,9 +379,9 @@ def create_project(project_name,expired=None):
     `created_at` int(11) DEFAULT NULL COMMENT '创建时间',
     `updated_at` int(11) DEFAULT NULL COMMENT '更新时间',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin AUTO_INCREMENT=1;""".format(project_name=project_name) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin AUTO_INCREMENT=1;""".format(project_name=project_name)
         do_tidb_exe(insert_plan)
-        print(project_name+'的分群附加表表已添加完')
+        print(project_name + '的分群附加表表已添加完')
         do_tidb_exe(insert_list)
         insert_noti = """CREATE TABLE IF NOT EXISTS `{project_name}_noti` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -407,28 +436,31 @@ def create_project(project_name,expired=None):
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin AUTO_INCREMENT=1001;""".format(project_name=project_name)
         do_tidb_exe(insert_noti_temple)
-        print(project_name+'的消息附加表表已添加完')
+        print(project_name + '的消息附加表表已添加完')
         if expired == None:
             expired_at = 2147483647
         else:
             expired_at = int(time.mktime(time.strptime(expired, "%Y-%m-%d")))
         timenow = int(time.time())
-        insert_project_list = """insert project_list (`project_name`,`created_at`,`expired_at`) values ('{project_name}',{created_at},{expired_at})""".format(project_name=project_name,created_at=timenow,expired_at=expired_at)
+        insert_project_list = """insert project_list (`project_name`,`created_at`,`expired_at`) values ('{project_name}',{created_at},{expired_at})""".format(
+            project_name=project_name, created_at=timenow, expired_at=expired_at)
         do_tidb_exe(insert_project_list)
-        print(project_name+'project列表已插入')
+        print(project_name + 'project列表已插入')
+
 
 def update_mobile_ad_src():
-    with open(os.path.join(os.path.dirname(__file__).replace('component',''),'configs','mobile_ad_src_list.csv'),encoding='utf-8') as f:
-        row = csv.reader(f, delimiter = ',')
-        next(row)    #跳过首行
-        total_count= 0
+    with open(os.path.join(os.path.dirname(__file__).replace('component', ''), 'configs', 'mobile_ad_src_list.csv'), encoding='utf-8') as f:
+        row = csv.reader(f, delimiter=',')
+        next(row)  # 跳过首行
+        total_count = 0
         for r in row:
-            result,count =insert_mobile_ad_src(src=r[0],src_name=r[1],src_args=r[2],utm_source=r[3],utm_medium=r[4],utm_campaign=r[5],utm_content=r[6],utm_term=r[7])
-            total_count = total_count+count
-    print(str(total_count)+'条移动广告来源插入或更新完成（更新会记2次）')
+            result, count = insert_mobile_ad_src(src=r[0], src_name=r[1], src_args=r[2], utm_source=r[3], utm_medium=r[4], utm_campaign=r[5], utm_content=r[6],
+                                                 utm_term=r[7])
+            total_count = total_count + count
+    print(str(total_count) + '条移动广告来源插入或更新完成（更新会记2次）')
 
 
 if __name__ == "__main__":
-        # create_project(project_name='test_app_with_date',expired='2020-01-01')
-        create_project(project_name='my_app_test')
-        update_mobile_ad_src()
+    # create_project(project_name='test_app_with_date',expired='2020-01-01')
+    create_project(project_name='my_app_test')
+    update_mobile_ad_src()
